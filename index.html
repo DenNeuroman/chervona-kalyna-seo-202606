@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEO Трекер — Червона Калина Харків</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --bg2: #181818;
+    --bg3: #222222;
+    --bg4: #2a2a2a;
+    --border: #333333;
+    --border2: #3f3f3f;
+    --text: #e8e6e0;
+    --text2: #a8a6a0;
+    --text3: #6b6a66;
+    --accent: #c0392b;
+    --accent2: #e74c3c;
+    --green: #27ae60;
+    --green2: #2ecc71;
+    --amber: #e67e22;
+    --blue: #2980b9;
+    --purple: #8e44ad;
+    --radius: 8px;
+    --radius-sm: 5px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; min-height: 100vh; }
+
+  /* ── STICKY HEADER ── */
+  #header {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    padding: 12px 20px 10px;
+  }
+  #header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  #header-title { display: flex; align-items: center; gap: 10px; }
+  #header-title .logo { width: 28px; height: 28px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  #header-title h1 { font-size: 15px; font-weight: 600; color: var(--text); }
+  #header-title .sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+  #header-stats { display: flex; gap: 16px; align-items: center; }
+  .stat-chip { font-size: 12px; color: var(--text2); }
+  .stat-chip span { color: var(--text); font-weight: 500; }
+  #pct-label { font-size: 12px; font-weight: 600; color: var(--green2); }
+  #reset-btn { font-size: 11px; color: var(--text3); background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px 9px; cursor: pointer; transition: .15s; }
+  #reset-btn:hover { color: var(--text2); border-color: var(--border2); }
+  /* progress bar */
+  #bar-wrap { height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+  #bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green2)); border-radius: 2px; transition: width .4s ease; width: 0%; }
+
+  /* ── FILTER TABS ── */
+  #filters { display: flex; gap: 6px; padding: 10px 20px 0; flex-wrap: wrap; }
+  .filter-btn {
+    font-size: 12px; padding: 4px 12px; border-radius: 20px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--bg3); color: var(--text2);
+    transition: .15s; display: flex; align-items: center; gap: 5px;
+  }
+  .filter-btn:hover { border-color: var(--border2); color: var(--text); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .filter-btn .cnt { background: rgba(255,255,255,.15); border-radius: 10px; padding: 0 6px; font-size: 11px; }
+
+  /* ── MAIN ── */
+  #main { max-width: 860px; margin: 0 auto; padding: 20px; }
+
+  /* ── PHASE ── */
+  .phase { margin-bottom: 16px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .phase-header {
+    display: flex; align-items: center; gap: 10px; padding: 11px 14px;
+    background: var(--bg3); cursor: pointer; user-select: none;
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+  }
+  .phase-header:hover { background: var(--bg4); }
+  .phase-toggle { font-size: 10px; color: var(--text3); transition: transform .2s; flex-shrink: 0; }
+  .phase-toggle.open { transform: rotate(90deg); }
+  .phase-icon { font-size: 16px; flex-shrink: 0; }
+  .phase-name { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; }
+  .phase-meta { display: flex; align-items: center; gap: 8px; }
+  .phase-progress { font-size: 11px; color: var(--text3); }
+  .phase-status { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 500; }
+  .status-urgent   { background: rgba(192,57,43,.2);  color: #e74c3c; }
+  .status-active   { background: rgba(39,174,96,.2);  color: var(--green2); }
+  .status-next     { background: rgba(230,126,34,.2); color: #f39c12; }
+  .status-pending  { background: rgba(41,128,185,.2); color: #5dade2; }
+  .status-ongoing  { background: rgba(142,68,173,.2); color: #bb8fce; }
+  .phase-bar-wrap  { width: 60px; height: 4px; background: var(--bg4); border-radius: 2px; overflow: hidden; flex-shrink: 0; }
+  .phase-bar-fill  { height: 100%; border-radius: 2px; transition: width .3s; }
+
+  /* ── TASK LIST ── */
+  .task-list { background: var(--bg2); }
+  .task-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background .12s;
+  }
+  .task-row:last-child { border-bottom: none; }
+  .task-row:hover { background: var(--bg3); }
+  .task-row.done-row { opacity: .5; }
+
+  /* priority dot */
+  .priority-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+  .p-high   { background: #e74c3c; }
+  .p-mid    { background: #f39c12; }
+  .p-low    { background: #5dade2; }
+  .p-info   { background: var(--text3); }
+
+  /* checkbox */
+  .cb { width: 16px; height: 16px; border: 1.5px solid var(--border2); border-radius: 4px; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; transition: .15s; }
+  .cb.checked { background: var(--green); border-color: var(--green); }
+  .cb.checked::after { content: '✓'; font-size: 10px; color: #fff; font-weight: 700; }
+
+  /* task body */
+  .task-body { flex: 1; min-width: 0; }
+  .task-name { font-size: 13px; color: var(--text); line-height: 1.4; }
+  .task-name.done { text-decoration: line-through; color: var(--text3); }
+  .task-sub { font-size: 11px; color: var(--text3); margin-top: 3px; line-height: 1.4; }
+  .task-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+  .tag { font-size: 10px; padding: 1px 7px; border-radius: 10px; font-weight: 500; }
+  .tag-seo    { background: rgba(192,57,43,.18); color: #e74c3c; }
+  .tag-tech   { background: rgba(41,128,185,.18); color: #5dade2; }
+  .tag-content{ background: rgba(39,174,96,.18);  color: var(--green2); }
+  .tag-en     { background: rgba(142,68,173,.18); color: #bb8fce; }
+  .tag-links  { background: rgba(230,126,34,.18); color: #f39c12; }
+  .tag-wp     { background: rgba(52,152,219,.18); color: #7fb3d3; }
+  .tag-quick  { background: rgba(255,255,255,.1);  color: var(--text2); }
+
+  /* empty */
+  #empty-state { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 13px; display: none; }
+
+  @media (max-width: 600px) {
+    #header-stats { display: none; }
+    #main { padding: 12px; }
+    .phase-bar-wrap { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="header-top">
+    <div id="header-title">
+      <div class="logo">🌿</div>
+      <div>
+        <h1>SEO Трекер — Червона Калина Харків</h1>
+        <div class="sub">chervona-kalyna.org · оновлено червень 2026</div>
+      </div>
+    </div>
+    <div id="header-stats">
+      <div class="stat-chip">Виконано: <span id="h-done">0</span>/<span id="h-total">0</span></div>
+      <div id="pct-label">0%</div>
+      <button id="reset-btn" onclick="resetAll()">↺ скинути</button>
+    </div>
+  </div>
+  <div id="bar-wrap"><div id="bar-fill"></div></div>
+</div>
+
+<div id="filters">
+  <button class="filter-btn active" onclick="setFilter('all',this)">Всі <span class="cnt" id="cnt-all">0</span></button>
+  <button class="filter-btn" onclick="setFilter('urgent',this)">🔴 Терміново <span class="cnt" id="cnt-urgent">0</span></button>
+  <button class="filter-btn" onclick="setFilter('active',this)">🟢 Активні <span class="cnt" id="cnt-active">0</span></button>
+  <button class="filter-btn" onclick="setFilter('next',this)">🟡 Наступні <span class="cnt" id="cnt-next">0</span></button>
+  <button class="filter-btn" onclick="setFilter('ongoing',this)">🟣 Регулярні <span class="cnt" id="cnt-ongoing">0</span></button>
+  <button class="filter-btn" onclick="setFilter('done',this)">✅ Виконані <span class="cnt" id="cnt-done-f">0</span></button>
+</div>
+
+<div id="main">
+  <div id="checklist"></div>
+  <div id="empty-state">Немає задач у цьому фільтрі</div>
+</div>
+
+<script>
+const KEY = 'ck_seo_v1';
+let state = {};
+let currentFilter = 'all';
+
+const PHASES = [
+  {
+    id: 'tech_week1',
+    icon: '⚙️',
+    name: 'Технічне SEO — тиждень 1',
+    status: 'urgent',
+    statusLabel: 'Терміново',
+    tasks: [
+      {
+        id: 't1', done: false, priority: 'high',
+        name: 'Закрити dev.chervona-kalyna.org від індексації',
+        sub: 'Додати robots.txt на dev-піддомен: User-agent: * / Disallow: /  — або noindex у header. 7 URL вже в GSC, крадуть авторитет домену.',
+        tags: ['tech','quick']
+      },
+      {
+        id: 't2', done: false, priority: 'high',
+        name: 'Переписати Title та Description головної сторінки',
+        sub: 'Поточний title слабкий. Новий: «Благодійний фонд «Червона Калина Харків» — гуманітарна допомога ВПО». Запит «червона» дає 3 121 показ і 1 клік (CTR 0.03%) — причина в сніппеті.',
+        tags: ['seo','quick']
+      },
+      {
+        id: 't3', done: false, priority: 'high',
+        name: 'Переписати Title + Description /en/about/',
+        sub: 'Новий title: «Chervona Kalyna Kharkiv — Humanitarian Aid for IDPs in Ukraine». «chervona kalyna» дає 1 252 покази та CTR 0.4%. Міжнародний донор нас бачить, але не клікає.',
+        tags: ['seo','en','quick']
+      },
+      {
+        id: 't4', done: false, priority: 'mid',
+        name: 'Перевірити канонікали на всіх сторінках UK+EN',
+        sub: 'Переконатись, що /en/about/ має canonical → /en/about/ (не на UA-версію). Hreflang uk / en повинні вказувати один на одного.',
+        tags: ['tech']
+      },
+      {
+        id: 't5', done: false, priority: 'mid',
+        name: 'Перевірити швидкість завантаження на мобільному',
+        sub: '77% трафіку — мобільний. Запустити PageSpeed Insights для головної та /dopomoga-pereselentsyam/. Ціль: LCP < 2.5s.',
+        tags: ['tech']
+      },
+    ]
+  },
+  {
+    id: 'metatags',
+    icon: '🏷️',
+    name: 'Метатеги — пріоритетні сторінки',
+    status: 'urgent',
+    statusLabel: 'Терміново',
+    tasks: [
+      {
+        id: 'm1', done: false, priority: 'high',
+        name: 'Title + Description для /dopomoga-pereselentsyam/',
+        sub: 'Сторінка дає 376 кліків та 5 738 показів, позиція 10.0. Title: «Допомога переселенцям у Харкові | БФ «Червона Калина Харків»». Description з цифрами.',
+        tags: ['seo']
+      },
+      {
+        id: 'm2', done: false, priority: 'high',
+        name: 'Title + Description для /volontery/',
+        sub: '87 кліків, 2 654 покази, позиція 9.9. Запит «волонтери Харків» — 898 показів, CTR 1.2%. Title: «Волонтери Харківського фонду «Червона Калина» — хто ми і як допомагаємо».',
+        tags: ['seo']
+      },
+      {
+        id: 'm3', done: false, priority: 'mid',
+        name: 'Title + Description для /stati-volonterom/',
+        sub: '159 кліків, 2 046 показів, позиція 20.2 — занадто глибоко для 159 кліків. Title під запит «як стати волонтером у Харкові».',
+        tags: ['seo']
+      },
+      {
+        id: 'm4', done: false, priority: 'mid',
+        name: 'Title + Description для /psihologichna-pidtrimka/',
+        sub: '20 кліків, 1 258 показів, позиція 13.6. Ціль: вийти в ТОП-10 за «психологічна допомога Харків». Title + Description з ключовим словом.',
+        tags: ['seo']
+      },
+      {
+        id: 'm5', done: false, priority: 'mid',
+        name: 'Alt-тексти для фото на топ-5 сторінках',
+        sub: 'Головна, /dopomoga-pereselentsyam/, /stati-volonterom/, /en/about/. Формат: «Волонтери БФ «Червона Калина Харків» видають гуманітарну допомогу переселенцям, [місяць рік]».',
+        tags: ['seo','wp']
+      },
+    ]
+  },
+  {
+    id: 'content_reports',
+    icon: '📄',
+    name: 'Контент — квартальні та річний звіти',
+    status: 'active',
+    statusLabel: 'Активні',
+    tasks: [
+      {
+        id: 'r1', done: true, priority: 'high',
+        name: 'Звіт за Q3 2025 (UA) — написати та опублікувати',
+        sub: 'Опубліковано на сайті. Ключові слова: гуманітарна допомога ВПО Харків, Червона Калина.',
+        tags: ['content','wp']
+      },
+      {
+        id: 'r2', done: true, priority: 'high',
+        name: 'Звіт за Q4 2025 (UA) — написати та опублікувати',
+        sub: 'Опубліковано на сайті. URL: /zvit-za-4-kvartal-2025/',
+        tags: ['content','wp']
+      },
+      {
+        id: 'r3', done: true, priority: 'high',
+        name: 'Звіт за Q4 2025 (EN) — NYT-стиль для міжнародної аудиторії',
+        sub: 'Документ підготовлено. Опублікувати на /en/report-q4-2025/',
+        tags: ['content','en']
+      },
+      {
+        id: 'r4', done: false, priority: 'high',
+        name: 'Опублікувати Річний звіт 2025 (UA) на сайті',
+        sub: 'URL: /zvit-za-2025-rik/ · SEO Title: «Річний звіт 2025 | Благодійний фонд «Червона Калина Харків»» · Додати внутрішні посилання на всі 4 квартали.',
+        tags: ['content','wp','links']
+      },
+      {
+        id: 'r5', done: false, priority: 'high',
+        name: 'Опублікувати Річний звіт 2025 (EN) на сайті',
+        sub: 'URL: /en/2025-annual-report/ · Додати internal links на /en/q1-q4-2025-report/ · CTA на /en/donate/',
+        tags: ['content','en','wp','links']
+      },
+      {
+        id: 'r6', done: false, priority: 'mid',
+        name: 'Звіт за Q1 2026 (UA) — написати та опублікувати',
+        sub: 'Зібрати факти з Facebook за січень–березень 2026. Ключові слова: гуманітарна допомога Харків 2026.',
+        tags: ['content','wp']
+      },
+      {
+        id: 'r7', done: false, priority: 'mid',
+        name: 'Звіт за Q1 2026 (EN) — NYT-стиль',
+        sub: 'Адаптація для міжнародних донорів. Опублікувати на /en/report-q1-2026/',
+        tags: ['content','en']
+      },
+    ]
+  },
+  {
+    id: 'interlinking',
+    icon: '🔗',
+    name: 'Внутрішня перелінковка',
+    status: 'next',
+    statusLabel: 'Наступні',
+    tasks: [
+      {
+        id: 'l1', done: false, priority: 'high',
+        name: 'Додати посилання на квартали в Річному звіті 2025 (UA)',
+        sub: '4 посилання: «Звіт за I/II/III/IV квартал 2025» → відповідні URL. Якірні тексти вказані в SEO-блоку документа.',
+        tags: ['links','wp']
+      },
+      {
+        id: 'l2', done: false, priority: 'high',
+        name: 'Додати посилання на квартали в Річному звіті 2025 (EN)',
+        sub: '4 посилання + /en/donate/ + /en/about/. Якірні тексти: «Q1 2025 Report», «support our work», «about the foundation».',
+        tags: ['links','en','wp']
+      },
+      {
+        id: 'l3', done: false, priority: 'mid',
+        name: 'Додати CTA-блок «Підтримати фонд» в кожен квартальний звіт',
+        sub: 'В кінці кожного звіту (Q1–Q4): посилання на /dopomogty/ та /stati-volonterom/. Якір: «підтримати фонд» та «стати волонтером».',
+        tags: ['links','wp']
+      },
+      {
+        id: 'l4', done: false, priority: 'mid',
+        name: 'Перехресні посилання між UA та EN версіями звітів',
+        sub: 'Кожна UA-сторінка звіту посилається на EN-версію і навпаки. Текст: «Read in English» / «Читати українською».',
+        tags: ['links','en','wp']
+      },
+      {
+        id: 'l5', done: false, priority: 'low',
+        name: 'Посилання з /dopomoga-pereselentsyam/ на звіти',
+        sub: 'Сторінка з 376 кліків. Додати блок «Наші звіти про роботу» з посиланнями на річний та останній квартальний звіт.',
+        tags: ['links','wp']
+      },
+    ]
+  },
+  {
+    id: 'new_content',
+    icon: '✍️',
+    name: 'Новий контент — CTR-розриви та ТОП-10',
+    status: 'next',
+    statusLabel: 'Наступні',
+    tasks: [
+      {
+        id: 'n1', done: false, priority: 'high',
+        name: 'Стаття під запит «волонтери Харків»',
+        sub: '898 показів, CTR 1.2%, позиція ~10. Тема: «Волонтери Харкова: як БФ «Червона Калина» допомагає переселенцям щодня». Обсяг: 800–1000 слів. Ключ у H1, H2, description.',
+        tags: ['content','seo']
+      },
+      {
+        id: 'n2', done: false, priority: 'high',
+        name: 'Стаття «Як отримати гуманітарну допомогу ВПО в Харкові»',
+        sub: 'Інформаційний запит з 524 показів та 4.2% CTR — є попит. H1: «Гуманітарна допомога ВПО в Харкові: куди звертатись». Посилання: /dopomoga-pereselentsyam/.',
+        tags: ['content','seo']
+      },
+      {
+        id: 'n3', done: false, priority: 'mid',
+        name: 'EN-стаття «How to support IDPs in Kharkiv, Ukraine»',
+        sub: '«chervona kalyna» — 1 252 покази від міжнародної аудиторії. Стаття з H1 під цей запит + CTA на /en/donate/ дасть перший EN-контентний лендинг.',
+        tags: ['content','seo','en']
+      },
+      {
+        id: 'n4', done: false, priority: 'mid',
+        name: 'Стаття «Психологічна допомога переселенцям у Харкові»',
+        sub: '/psihologichna-pidtrimka/ — 1 258 показів, позиція 13.6. Окрема стаття з описом програм фонду підніме сторінку в ТОП-10.',
+        tags: ['content','seo']
+      },
+      {
+        id: 'n5', done: false, priority: 'low',
+        name: 'Стаття «Кухня доброти: як ми годуємо переселенців Харкова»',
+        sub: 'Унікальна тема, немає конкурентів. Описати роботу кухні, партнерів (Good People, храм), цифри за рік. Довгостроковий SEO-ефект.',
+        tags: ['content','seo']
+      },
+    ]
+  },
+  {
+    id: 'en_direction',
+    icon: '🌍',
+    name: 'EN-напрямок — міжнародна аудиторія',
+    status: 'next',
+    statusLabel: 'Наступні',
+    tasks: [
+      {
+        id: 'e1', done: false, priority: 'high',
+        name: 'Переписати /en/about/ під запит «Chervona Kalyna Kharkiv»',
+        sub: 'Поточна позиція 9.1, 5 816 показів. Новий H1: «Chervona Kalyna Kharkiv — Charitable Foundation for IDPs». Перший абзац із контекстом Харкова і фронту.',
+        tags: ['seo','en']
+      },
+      {
+        id: 'e2', done: true, priority: 'high',
+        name: 'Опублікувати EN-звіти Q3 та Q4 2025',
+        sub: 'Документи підготовлено в NYT-стилі. Розмістити на /en/category/reporting/',
+        tags: ['content','en','wp']
+      },
+      {
+        id: 'e3', done: true, priority: 'high',
+        name: 'Річний звіт 2025 EN — підготовлено',
+        sub: 'NYT-стиль, SEO-метадані, карта посилань — все в документі. Залишилось опублікувати.',
+        tags: ['content','en']
+      },
+      {
+        id: 'e4', done: false, priority: 'mid',
+        name: 'Додати /en/donate/ у всі EN-матеріали як CTA',
+        sub: 'Перевірити всі EN-сторінки: чи є CTA з посиланням на donate. США (76 кліків) + Німеччина (45) + Велика Британія (34) = реальні донори.',
+        tags: ['en','links','wp']
+      },
+      {
+        id: 'e5', done: false, priority: 'low',
+        name: 'Hreflang для всіх EN/UA пар сторінок',
+        sub: 'Переконатись, що кожна UA-сторінка має hreflang="uk" та alternate hreflang="en" → EN-версію, і навпаки. Перевірити через GSC після впровадження.',
+        tags: ['tech','en']
+      },
+    ]
+  },
+  {
+    id: 'regular',
+    icon: '📅',
+    name: 'Регулярні задачі — мінімум 2 матеріали на місяць',
+    status: 'ongoing',
+    statusLabel: 'Регулярні',
+    tasks: [
+      {
+        id: 'reg1', done: false, priority: 'mid',
+        name: 'Квартальний звіт (UA) — публікація до 30 днів після закінчення кварталу',
+        sub: 'Збираємо факти з Facebook → Клод пише текст → DeepL UA → WordPress. Ключ: назва фонду + «гуманітарна допомога Харків [рік]».',
+        tags: ['content','wp']
+      },
+      {
+        id: 'reg2', done: false, priority: 'mid',
+        name: 'Квартальний звіт (EN) — NYT-адаптація + публікація',
+        sub: 'Паралельно з UA. URL: /en/report-q[N]-[year]/. CTA на /en/donate/ в кінці.',
+        tags: ['content','en','wp']
+      },
+      {
+        id: 'reg3', done: false, priority: 'mid',
+        name: 'Новина або подія — 1 матеріал на місяць (UA)',
+        sub: 'Теми: Кухня доброти, виїзди в громади, дитячі заходи, нові партнери. Ключові слова: волонтери Харків, допомога переселенцям.',
+        tags: ['content','wp']
+      },
+      {
+        id: 'reg4', done: false, priority: 'low',
+        name: 'Моніторинг GSC — раз на місяць',
+        sub: 'Перевіряти: нові CTR-розриви (покази без кліків), падіння позицій топ-сторінок, нові запити в ТОП-20. Оновлювати трекер.',
+        tags: ['seo']
+      },
+      {
+        id: 'reg5', done: false, priority: 'low',
+        name: 'Річний звіт (UA + EN) — підготовка у січні наступного року',
+        sub: 'Зводимо 4 квартали. UA: /zvit-za-[рік]-rik/ · EN: /en/[year]-annual-report/. SEO-блок із метатегами та картою посилань.',
+        tags: ['content','en','wp']
+      },
+    ]
+  },
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────────────
+function load() {
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch(e) { state = {}; }
+}
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(state));
+}
+function isDone(task) {
+  return state[task.id] !== undefined ? state[task.id] : task.done;
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────────
+function render() {
+  const container = document.getElementById('checklist');
+  container.innerHTML = '';
+
+  let totalDone = 0, totalAll = 0;
+  const filterCounts = { urgent: 0, active: 0, next: 0, ongoing: 0, done: 0 };
+
+  // count all for filters
+  PHASES.forEach(ph => {
+    if (ph.status !== 'active' && ph.status !== 'urgent' && ph.status !== 'next' && ph.status !== 'ongoing') return;
+    filterCounts[ph.status] = (filterCounts[ph.status] || 0) + ph.tasks.length;
+    ph.tasks.forEach(task => {
+      if (isDone(task)) filterCounts.done++;
+    });
+  });
+
+  // build visible phases
+  PHASES.forEach(ph => {
+    const phaseDone = ph.tasks.filter(t => isDone(t)).length;
+    const phaseAll  = ph.tasks.length;
+    totalDone += phaseDone;
+    totalAll  += phaseAll;
+
+    // filter
+    if (currentFilter !== 'all' && currentFilter !== 'done' && ph.status !== currentFilter) return;
+    if (currentFilter === 'done' && phaseDone === 0) return;
+
+    const isOpen = state['__open_' + ph.id] !== false;
+    const phPct  = phaseAll ? Math.round(phaseDone / phaseAll * 100) : 0;
+
+    const phaseEl = document.createElement('div');
+    phaseEl.className = 'phase';
+
+    const statusColors = {
+      urgent: '#c0392b', active: '#27ae60', next: '#e67e22', pending: '#2980b9', ongoing: '#8e44ad'
+    };
+    const barColor = statusColors[ph.status] || '#555';
+
+    phaseEl.innerHTML = `
+      <div class="phase-header" onclick="togglePhase('${ph.id}')">
+        <span class="phase-toggle ${isOpen ? 'open' : ''}">▶</span>
+        <span class="phase-icon">${ph.icon}</span>
+        <span class="phase-name">${ph.name}</span>
+        <div class="phase-meta">
+          <span class="phase-progress">${phaseDone}/${phaseAll}</span>
+          <span class="phase-status status-${ph.status}">${ph.statusLabel}</span>
+          <div class="phase-bar-wrap">
+            <div class="phase-bar-fill" style="width:${phPct}%;background:${barColor}"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    if (isOpen) {
+      const listEl = document.createElement('div');
+      listEl.className = 'task-list';
+
+      let visibleTasks = ph.tasks;
+      if (currentFilter === 'done') visibleTasks = ph.tasks.filter(t => isDone(t));
+
+      visibleTasks.forEach(task => {
+        const done = isDone(task);
+        const row = document.createElement('div');
+        row.className = 'task-row' + (done ? ' done-row' : '');
+        row.onclick = () => toggleTask(task.id, task.done);
+
+        const tagsHtml = (task.tags || []).map(tag => `<span class="tag tag-${tag}">${tagLabel(tag)}</span>`).join('');
+
+        row.innerHTML = `
+          <div class="priority-dot p-${task.priority}"></div>
+          <div class="cb ${done ? 'checked' : ''}"></div>
+          <div class="task-body">
+            <div class="task-name ${done ? 'done' : ''}">${task.name}</div>
+            ${task.sub ? `<div class="task-sub">${task.sub}</div>` : ''}
+            ${tagsHtml ? `<div class="task-tags">${tagsHtml}</div>` : ''}
+          </div>
+        `;
+        listEl.appendChild(row);
+      });
+      phaseEl.appendChild(listEl);
+    }
+
+    container.appendChild(phaseEl);
+  });
+
+  // update header
+  document.getElementById('h-done').textContent = totalDone;
+  document.getElementById('h-total').textContent = totalAll;
+  const pct = totalAll ? Math.round(totalDone / totalAll * 100) : 0;
+  document.getElementById('bar-fill').style.width = pct + '%';
+  document.getElementById('pct-label').textContent = pct + '% виконано';
+
+  // filter counts
+  document.getElementById('cnt-all').textContent = totalAll;
+  document.getElementById('cnt-urgent').textContent  = PHASES.filter(p=>p.status==='urgent').reduce((s,p)=>s+p.tasks.length,0);
+  document.getElementById('cnt-active').textContent  = PHASES.filter(p=>p.status==='active').reduce((s,p)=>s+p.tasks.length,0);
+  document.getElementById('cnt-next').textContent    = PHASES.filter(p=>p.status==='next').reduce((s,p)=>s+p.tasks.length,0);
+  document.getElementById('cnt-ongoing').textContent = PHASES.filter(p=>p.status==='ongoing').reduce((s,p)=>s+p.tasks.length,0);
+  document.getElementById('cnt-done-f').textContent  = totalDone;
+
+  document.getElementById('empty-state').style.display =
+    container.children.length === 0 ? 'block' : 'none';
+}
+
+function tagLabel(tag) {
+  const map = { seo:'SEO', tech:'Техніка', content:'Контент', en:'EN', links:'Посилання', wp:'WordPress', quick:'Швидко' };
+  return map[tag] || tag;
+}
+
+function toggleTask(id, defaultDone) {
+  state[id] = !isDone({ id, done: defaultDone });
+  save(); render();
+}
+
+function togglePhase(id) {
+  const key = '__open_' + id;
+  state[key] = state[key] === false ? true : false;
+  save(); render();
+}
+
+function setFilter(f, btn) {
+  currentFilter = f === 'done-f' ? 'done' : f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function resetAll() {
+  if (!confirm('Скинути стан всіх задач до початкового?')) return;
+  localStorage.removeItem(KEY);
+  state = {};
+  render();
+}
+
+load();
+render();
+</script>
+</body>
+</html>
